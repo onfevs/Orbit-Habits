@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef, useLayoutEffect, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Habit, HabitStatus, DailyNotes, CalendarViewMode } from '../types';
-import { getMonthDates, formatDateKey, getHolidays, isWeeklyGoalMet } from '../utils';
+import { getMonthDates, formatDateKey, getHolidays, isWeeklyGoalMet, getZodiacSign } from '../utils';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { ChevronLeft, ChevronRight, X, Cake,
   Activity, Book, Briefcase, Coffee, Droplets, 
@@ -53,10 +53,12 @@ const CircularCalendar: React.FC<CircularCalendarProps> = ({
   birthday,
   startDayOfWeek = 1
 }) => {
+  // Fix: Initialize selectedDay with null
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [hoveredDay, setHoveredDay] = useState<HoverState | null>(null);
   const [localNote, setLocalNote] = useState('');
   const [viewMode, setViewMode] = useState<CalendarViewMode>('circular');
+  const [calendarSize, setCalendarSize] = useState(0); // Dynamic size for responsive layout
 
   const containerRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
@@ -69,9 +71,24 @@ const CircularCalendar: React.FC<CircularCalendarProps> = ({
   const month = currentDate.getMonth();
   const days = useMemo(() => getMonthDates(year, month), [year, month]);
   const holidays = useMemo(() => getHolidays(year), [year]);
+  const zodiac = useMemo(() => getZodiacSign(currentDate), [currentDate]);
 
-  const radius = 145; 
-  const center = 180; 
+
+  // Dynamic radius and center based on actual container size
+  const radius = calendarSize * 0.425; // Adjust factor for padding (e.g., 85% of half the size)
+  const center = calendarSize / 2;
+
+  // Measure container size for responsiveness
+  useLayoutEffect(() => {
+    const updateSize = () => {
+      if (containerRef.current) {
+        setCalendarSize(containerRef.current.offsetWidth);
+      }
+    };
+    window.addEventListener('resize', updateSize);
+    updateSize(); // Set initial size
+    return () => window.removeEventListener('resize', updateSize);
+  }, []);
 
   // Initialize note state when modal opens
   useEffect(() => {
@@ -128,60 +145,83 @@ const CircularCalendar: React.FC<CircularCalendarProps> = ({
     { name: 'Remaining', value: monthlyStats.total - monthlyStats.completed },
   ];
 
-  // --- LOGIC: Color Calculation ---
+  // --- LOGIC: Color Calculation (Revised for Motivation & Traffic Light) ---
   const getDayColorClass = (completedCount: number, totalHabits: number, isPast: boolean, isHoliday: boolean) => {
       if (totalHabits === 0) return { bg: "bg-surface", text: "text-muted", border: "border-slate-700", type: 'neutral' };
       
-      // 0. No habits completed
-      if (completedCount === 0) {
-           // Holiday Priority: If it's a holiday and nothing is done, show holiday color
-           if (isHoliday) {
-               return {
-                   bg: "bg-indigo-900/50",
-                   text: "text-indigo-200 font-semibold",
-                   border: "border-indigo-500/50",
-                   shadow: "shadow-[0_0_10px_rgba(99,102,241,0.3)]",
-                   type: 'holiday'
-               };
-           }
-
-           return isPast 
-             ? { bg: "bg-slate-900/30", text: "text-slate-700/60", border: "border-slate-800/50", type: 'neutral' } 
-             : { bg: "bg-surface", text: "text-muted", border: "border-slate-700", type: 'neutral' };
-      }
-
       const ratio = completedCount / totalHabits;
 
-      // 1. Perfect (100%) -> Radiant Green
+      // 1. Birthday (Highest Priority) - Overrides performance colors
+      // This is handled as an override in renderDayNode to apply on top of any status color
+
+      // 2. Holidays (Second Highest Priority) - Overrides performance colors
+      if (isHoliday) {
+          return {
+              bg: "bg-indigo-900/50",
+              text: "text-indigo-200 font-semibold",
+              border: "border-indigo-500/50",
+              shadow: "shadow-[0_0_10px_rgba(99,102,241,0.3)]",
+              type: 'holiday'
+          };
+      }
+
+      // 3. Performance-based colors (Traffic Light System)
+      // Perfect (100%) -> Radiant Emerald Green (Vibrant Success)
       if (ratio === 1) {
           return { 
-              bg: "bg-gradient-to-br from-emerald-400 to-emerald-600", 
+              bg: "bg-gradient-to-br from-lime-300 to-green-500", 
               text: "text-white font-bold", 
-              border: "border-emerald-400",
+              border: "border-lime-300",
               shadow: "shadow-neon-green",
-              type: 'success'
+              type: 'success-perfect'
           };
       }
       
-      // 2. Good (>= 50% + 1 approx) -> Gold/Yellow
-      if (ratio >= 0.5) {
+      // Excellent (75% - 99%) -> Strong Green
+      if (ratio >= 0.75) {
            return {
-               bg: "bg-gradient-to-br from-amber-300 to-orange-400",
-               text: "text-black font-bold",
-               border: "border-amber-400",
-               shadow: "shadow-[0_0_15px_rgba(245,158,11,0.4)]",
-               type: 'warning'
+               bg: "bg-gradient-to-br from-emerald-400 to-emerald-600",
+               text: "text-white font-bold",
+               border: "border-emerald-400",
+               shadow: "shadow-[0_0_15px_rgba(134,239,172,0.4)]",
+               type: 'success-good'
            };
       }
 
-      // 3. Bad (< 50%) -> Red
-      return {
-          bg: "bg-gradient-to-br from-red-500 to-red-700",
-          text: "text-white",
-          border: "border-red-500",
-          shadow: "shadow-[0_0_10px_rgba(239,68,68,0.4)]",
-          type: 'danger'
-      };
+      // Good Progress (50% - 74%) -> Vibrant Yellow/Orange
+      if (ratio >= 0.5) {
+           return {
+               bg: "bg-gradient-to-br from-amber-300 to-yellow-500",
+               text: "text-black font-bold",
+               border: "border-amber-400",
+               shadow: "shadow-[0_0_15px_rgba(245,158,11,0.4)]",
+               type: 'warning-good'
+           };
+      }
+
+      // Some Progress (1% - 49%) -> Muted Orange/Reddish (needs attention)
+      if (ratio > 0) {
+          return {
+              bg: "bg-gradient-to-br from-orange-500 to-red-600",
+              text: "text-white",
+              border: "border-orange-500",
+              shadow: "shadow-[0_0_8px_rgba(251,113,133,0.3)]", // Soft red glow
+              type: 'warning-some'
+          };
+      }
+
+      // No Progress (0%)
+      if (isPast) {
+          return { 
+              bg: "bg-gradient-to-br from-red-800 to-rose-900", // Muted Red for missed past days
+              text: "text-white", 
+              border: "border-red-900",
+              shadow: "shadow-[0_0_8px_rgba(185,28,28,0.2)]", // Dark red glow
+              type: 'danger-missed'
+          }; 
+      }
+      // Future or current day with no marks
+      return { bg: "bg-surface", text: "text-muted", border: "border-slate-700", type: 'neutral' };
   };
 
   // GSAP Flash Animation on Status Change
@@ -237,9 +277,9 @@ const CircularCalendar: React.FC<CircularCalendarProps> = ({
 
     // Determine tooltip theme based on color type
     let theme = "indigo"; // Default holiday
-    if (colorType === 'success') theme = "emerald";
-    if (colorType === 'warning') theme = "amber";
-    if (colorType === 'danger') theme = "red";
+    if (colorType.startsWith('success')) theme = "emerald";
+    if (colorType.startsWith('warning')) theme = "amber";
+    if (colorType.startsWith('danger')) theme = "red"; 
     if (isBirthday) theme = "pink";
 
     setHoveredDay({ date, isBirthday, holidayName, x, y, colorTheme: theme });
@@ -278,12 +318,16 @@ const CircularCalendar: React.FC<CircularCalendarProps> = ({
         if (status === 'completed') {
             effectiveCompletedCount++;
         } else {
-            // Check if user already hit the weekly goal for this habit in this week
-            const goalMet = isWeeklyGoalMet(h, date, logs[h.id] || {}, startDayOfWeek);
-            if (goalMet) {
-                // If goal met, we count this "failed" or "skipped" day as a success (Rest Day)
-                // for the purpose of the visual color indicator
-                effectiveCompletedCount++;
+            // If the habit has a weekly goal and that goal has already been met for the week
+            if (h.goalDaysPerWeek && h.goalDaysPerWeek < 7) {
+                // Check if the weekly goal for THIS habit is already met up to this specific date
+                const goalMetForThisHabitThisWeek = isWeeklyGoalMet(h, date, logs[h.id] || {}, startDayOfWeek);
+                if (goalMetForThisHabitThisWeek) {
+                    // If the weekly goal is met, then this day, even if not explicitly 'completed',
+                    // should contribute positively to the overall day's color.
+                    // This means it's considered a "rest day after achieving the goal" for visual purposes.
+                    effectiveCompletedCount++;
+                }
             }
         }
       });
@@ -308,9 +352,10 @@ const CircularCalendar: React.FC<CircularCalendarProps> = ({
       // View Specific Styles
       if (viewMode === 'circular') {
           const pos = getPosition(index, total, radius);
+          const dayNodeSize = 32; // w-8 h-8
           style = { 
-              left: `calc(50% + ${pos.x - center}px - 16px)`, 
-              top: `calc(50% + ${pos.y - center}px - 16px)`,
+              left: `calc(50% + ${pos.x - center}px - ${dayNodeSize / 2}px)`,
+              top: `calc(50% + ${pos.y - center}px - ${dayNodeSize / 2}px)`,
               position: 'absolute'
           };
           className += " w-8 h-8 rounded-full text-xs font-medium";
@@ -396,9 +441,14 @@ const CircularCalendar: React.FC<CircularCalendarProps> = ({
             >
                 <ChevronLeft size={20} />
             </button>
-            <h2 className="text-2xl font-serif font-bold text-primary tracking-wide">
-                {currentDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' })}
-            </h2>
+            <div className="flex flex-col items-center">
+                <h2 className="text-2xl font-serif font-bold text-primary tracking-wide">
+                    {currentDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
+                </h2>
+                <span className="text-sm text-slate-400 font-sans mt-1">
+                    {zodiac.symbol} {zodiac.name}
+                </span>
+            </div>
             <button 
                 onClick={() => onMonthChange(1)} 
                 className="p-2 rounded-full bg-surface border border-slate-700 hover:border-primary/50 text-text transition-colors shadow-soft active:scale-95"
@@ -430,9 +480,16 @@ const CircularCalendar: React.FC<CircularCalendarProps> = ({
 
       {/* --- CIRCULAR VIEW --- */}
       {viewMode === 'circular' && (
-        <div className="relative w-[360px] h-[360px] mt-4 mb-8">
+        // Adjusted container for responsiveness
+        <div className="relative w-full aspect-square max-w-[400px] mt-4 mb-8">
+            {/* Existing subtle border rings */}
             <div className="absolute inset-0 rounded-full border border-slate-800/40 scale-[0.85]" />
             <div className="absolute inset-0 rounded-full border border-slate-800/20 scale-[1.1]" />
+
+            {/* NEW: Additional, larger concentric rings for "zodiac house" feel */}
+            <div className="absolute inset-0 rounded-full border border-slate-800/30 scale-[1.3] animate-pulse-slow" style={{animationDelay: '0.5s'}} />
+            <div className="absolute inset-0 rounded-full border border-slate-800/20 scale-[1.5] animate-pulse-slow" style={{animationDelay: '1.5s'}} />
+            <div className="absolute inset-0 rounded-full border border-slate-800/10 scale-[1.7] animate-pulse-slow" style={{animationDelay: '2.5s'}} />
 
             <div className="center-chart absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
                 <div className="w-40 h-40 relative flex items-center justify-center bg-surface/80 backdrop-blur-sm rounded-full shadow-strong border-4 border-slate-800/50 overflow-hidden pointer-events-auto">

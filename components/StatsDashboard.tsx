@@ -30,7 +30,8 @@ const StatsDashboard: React.FC<StatsDashboardProps> = ({ habits, logs, settings 
   const habitStats = useMemo(() => {
     return habits.map(h => {
       const streaks = calculateStreak(logs[h.id] || {});
-      const criticalDays = calculateCriticalDays(logs[h.id] || {});
+      // Pass the habit object and startDayOfWeek to calculateCriticalDays
+      const criticalDays = calculateCriticalDays(h, logs[h.id] || {}, settings?.startDayOfWeek ?? 1);
       
       // Calculate completion over last 30 days
       let completed30Days = 0;
@@ -61,12 +62,22 @@ const StatsDashboard: React.FC<StatsDashboardProps> = ({ habits, logs, settings 
           }
       }
 
+      // Adjust weeklyProgress calculation to reflect meeting the goal
+      let weeklyProgress = 0;
+      if (h.goalDaysPerWeek && h.goalDaysPerWeek > 0) {
+        weeklyProgress = Math.min(100, Math.round((weeklyCompleted / h.goalDaysPerWeek) * 100));
+      } else {
+        // If no specific goalDaysPerWeek (implies 7/7 by default, or 100% if all done)
+        weeklyProgress = Math.min(100, Math.round((weeklyCompleted / 7) * 100));
+      }
+
+
       return {
         name: h.name,
         completed: completed30Days, 
         weeklyCompleted,
         weeklyGoal: h.goalDaysPerWeek || 7,
-        weeklyProgress: Math.min(100, Math.round((weeklyCompleted / (h.goalDaysPerWeek || 7)) * 100)),
+        weeklyProgress, // Use the adjusted weeklyProgress
         color: h.color,
         icon: h.icon,
         description: h.description,
@@ -161,7 +172,7 @@ const StatsDashboard: React.FC<StatsDashboardProps> = ({ habits, logs, settings 
             completed: completedCount
         });
     }
-    return data;
+    return data; 
   }, [habits, logs]);
 
   // 3. Cumulative Comparison Data
@@ -228,7 +239,7 @@ const StatsDashboard: React.FC<StatsDashboardProps> = ({ habits, logs, settings 
       }));
   }, [habits, logs]);
 
-  // 4. Overall Pie Data
+  // 4. Overall Pie Data - Adjusted to include color and percentage
   const pieData = useMemo(() => {
       let totalCompleted = 0;
       let totalMissed = 0;
@@ -246,11 +257,19 @@ const StatsDashboard: React.FC<StatsDashboardProps> = ({ habits, logs, settings 
               else totalUnmarked++;
           });
       }
-      return [
-          { name: 'Cumplidos', value: totalCompleted },
-          { name: 'No cumplidos', value: totalMissed },
-          { name: 'Sin marcar', value: totalUnmarked },
-      ]
+
+      const rawData = [
+          { name: 'Cumplidos', value: totalCompleted, color: CHART_THEME.success },
+          { name: 'No cumplidos', value: totalMissed, color: CHART_THEME.danger },
+          { name: 'Sin marcar', value: totalUnmarked, color: CHART_THEME.gold },
+      ];
+
+      const totalOverall = totalCompleted + totalMissed + totalUnmarked;
+      
+      return rawData.map(item => ({
+        ...item,
+        percent: totalOverall > 0 ? (item.value / totalOverall) * 100 : 0
+      }));
   }, [habits, logs]);
 
   return (
@@ -302,10 +321,11 @@ const StatsDashboard: React.FC<StatsDashboardProps> = ({ habits, logs, settings 
                  <TrendingUp size={16} /> Tendencia Diaria
              </h2>
              <p className="text-xs text-muted mb-4 font-sans">Cumplidos por día (Mes)</p>
-             <div className="h-32 flex-1">
+             <div className="h-40 min-h-[160px] flex-1">
                 <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={dailyTrend}>
-                        <XAxis dataKey="date" hide />
+                        <XAxis dataKey="date" tick={{fontSize: 10, fill: '#64748b'}} axisLine={false} tickLine={false} height={20} />
+                        <YAxis hide={true} domain={[0, 'dataMax + 1']} />
                         <Tooltip 
                             contentStyle={{ backgroundColor: '#151922', borderColor: CHART_THEME.gold, color: '#fff', fontSize: '10px' }}
                             itemStyle={{ color: CHART_THEME.gold }}
@@ -322,7 +342,7 @@ const StatsDashboard: React.FC<StatsDashboardProps> = ({ habits, logs, settings 
                  <CalendarRange size={16} /> Ritmo Mensual
              </h2>
              <p className="text-xs text-muted mb-4 font-sans">Acumulado vs Anterior</p>
-             <div className="h-32 flex-1">
+             <div className="h-40 min-h-[160px] flex-1">
                 <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={comparisonData}>
                         <defs>
@@ -331,6 +351,8 @@ const StatsDashboard: React.FC<StatsDashboardProps> = ({ habits, logs, settings 
                                 <stop offset="95%" stopColor={CHART_THEME.success} stopOpacity={0}/>
                             </linearGradient>
                         </defs>
+                        <XAxis dataKey="day" tick={{fontSize: 10, fill: '#64748b'}} axisLine={false} tickLine={false} height={20} />
+                        <YAxis hide={true} domain={[0, 'dataMax + 1']} />
                         <Tooltip 
                             contentStyle={{ backgroundColor: '#151922', borderColor: '#334155', color: '#fff', fontSize: '10px' }} 
                             labelFormatter={(label) => `Día ${label}`}
@@ -348,10 +370,11 @@ const StatsDashboard: React.FC<StatsDashboardProps> = ({ habits, logs, settings 
                  <BarChart3 size={16} /> Actividad Semanal
              </h2>
              <p className="text-xs text-muted mb-4 font-sans">Últimos 7 días</p>
-             <div className="h-32 flex-1">
+             <div className="h-32 min-h-[128px] flex-1">
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={weeklyActivityData}>
                         <XAxis dataKey="day" tick={{fontSize: 10, fill: '#64748b'}} axisLine={false} tickLine={false} />
+                        <YAxis hide={true} domain={[0, 'dataMax + 1']} />
                         <Tooltip cursor={{fill: 'rgba(255,255,255,0.03)'}} contentStyle={{ backgroundColor: '#151922', borderColor: '#334155', color: '#fff', fontSize: '10px' }} />
                         <Bar dataKey="completed" fill={CHART_THEME.gold} radius={[4, 4, 0, 0]} />
                     </BarChart>
@@ -362,10 +385,19 @@ const StatsDashboard: React.FC<StatsDashboardProps> = ({ habits, logs, settings 
           {/* Col 4: Distribution */}
           <div className="bg-surface border border-slate-700 rounded-xl p-4 flex flex-col items-center justify-center shadow-strong md:col-span-1 lg:col-span-1">
              <h2 className="text-primary font-serif font-semibold mb-1 text-sm w-full text-left">Distribución</h2>
-             <div className="h-24 w-full">
+             <div className="h-48 w-full"> {/* Increased height from h-40 to h-48 */}
                 <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                        <Pie data={pieData} innerRadius={30} outerRadius={45} paddingAngle={5} dataKey="value" stroke="none">
+                        <Pie 
+                            data={pieData} 
+                            innerRadius={30} // Reduced radius
+                            outerRadius={45} // Reduced radius
+                            paddingAngle={5} 
+                            dataKey="value" 
+                            stroke="none"
+                            // Removed the problematic label prop
+                            fill="white" // Ensure label text is white
+                        >
                             <Cell fill={CHART_THEME.success} />
                             <Cell fill={CHART_THEME.danger} />
                             <Cell fill={CHART_THEME.gold} />
@@ -374,15 +406,18 @@ const StatsDashboard: React.FC<StatsDashboardProps> = ({ habits, logs, settings 
                     </PieChart>
                 </ResponsiveContainer>
              </div>
-             <div className="flex gap-2 mt-2 font-sans">
-                 <div className="flex items-center gap-1">
-                    <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: CHART_THEME.success }}></div>
-                    <span className="text-[9px] text-muted">OK</span>
-                </div>
-                <div className="flex items-center gap-1">
-                    <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: CHART_THEME.danger }}></div>
-                    <span className="text-[9px] text-muted">No</span>
-                </div>
+             <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 mt-2 font-sans">
+                 {pieData.map((item, index) => (
+                    <div className="flex items-center gap-1" key={item.name}>
+                        <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: item.color }}></div>
+                        <span className="text-[8px] text-muted">{item.name}</span> {/* Reduced font size to 8px */}
+                        {item.percent > 0 && ( // Only show if percentage is meaningful
+                            <span className="text-[8px] font-bold ml-0.5" style={{ color: item.color }}> {/* Reduced font size and margin */}
+                                {item.percent.toFixed(0)}%
+                            </span>
+                        )}
+                    </div>
+                ))}
              </div>
           </div>
       </section>

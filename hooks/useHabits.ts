@@ -35,8 +35,25 @@ export const useHabits = () => {
         setHabits(data.habits || INITIAL_HABITS);
         setLogs(data.logs || {});
         setNotes(data.notes || {});
-        // Merge defaults in case of new settings fields
-        setSettings({ ...DEFAULT_SETTINGS, ...data.userSettings });
+        
+        // --- MODIFICACIÓN INICIO: Carga robusta de userSettings ---
+        let loadedSettings: UserSettings;
+        if (data.userSettings) {
+            loadedSettings = {
+                ...DEFAULT_SETTINGS, // Empezar con los valores por defecto
+                ...data.userSettings // Sobrescribir con los valores cargados
+            };
+            // Heurística: Si ya hay un nombre de usuario, asume que ha pasado por el onboarding
+            // Esto maneja casos donde el flag 'onboarded' podría estar ausente o ser falso en datos antiguos.
+            if (loadedSettings.userName && !loadedSettings.onboarded) {
+                loadedSettings.onboarded = true;
+            }
+        } else {
+            loadedSettings = DEFAULT_SETTINGS;
+        }
+        setSettings(loadedSettings);
+        // --- MODIFICACIÓN FIN ---
+
       } catch (e) {
         console.error("Failed to parse habit data", e);
         setHabits(INITIAL_HABITS);

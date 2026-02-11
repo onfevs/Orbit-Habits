@@ -126,7 +126,7 @@ const App: React.FC = () => {
         </header>
 
         {/* Main Content Area */}
-        <main className="flex-1 w-full max-w-5xl mx-auto px-4 pb-24 overflow-x-hidden">
+        <main className="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 md:px-8 pb-24 overflow-x-hidden">
             {currentView === 'dashboard' && (
             <div className="animate-in fade-in zoom-in-95 duration-300">
                 <CircularCalendar 

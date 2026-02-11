@@ -99,6 +99,8 @@ const DynamicBackground: React.FC = () => {
         {/* Deep Background Gradient Spotlights */}
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-900/10 rounded-full blur-[120px] animate-pulse-slow" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-primary/5 rounded-full blur-[100px] animate-pulse-slow" style={{ animationDelay: '2s'}} />
+        
+        {/* Removed the previous additional larger, subtle circles (blurred color spots) */}
 
         {/* Floating Icons */}
         {icons.map((icon) => (

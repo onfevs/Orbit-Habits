@@ -1,5 +1,5 @@
 import { DailyLog, Habit, UserSettings, UserLevel } from './types';
-import { MOTIVATIONAL_QUOTES, WEEK_DAYS } from './constants';
+import { MOTIVATIONAL_QUOTES, WEEK_DAYS, ZODIAC_SIGNS } from './constants';
 
 export const generateId = (): string => Math.random().toString(36).substr(2, 9);
 
@@ -42,10 +42,13 @@ export const isWeeklyGoalMet = (habit: Habit, date: Date, logs: DailyLog, startD
     startOfWeek.setDate(d.getDate() - diff);
 
     let count = 0;
-    // Count completions in this week window (7 days)
+    // Count completions in this week window (7 days), up to and including the current 'date'
     for(let i=0; i<7; i++) {
         const temp = new Date(startOfWeek);
         temp.setDate(startOfWeek.getDate() + i);
+        // Only count days up to the current date being evaluated
+        if (temp.setHours(0,0,0,0) > date.setHours(0,0,0,0)) continue; 
+
         if (logs[formatDateKey(temp)] === 'completed') {
             count++;
         }
@@ -325,28 +328,49 @@ export const calculateStreak = (logs: DailyLog): { current: number, longest: num
 };
 
 // Identify days where a habit was broken (failed or skipped) after a streak of at least 3 days
-export const calculateCriticalDays = (logs: DailyLog): string[] => {
-    const dates = Object.keys(logs).sort();
-    const criticalDays: string[] = [];
-    
-    // Simple lookback
-    let streak = 0;
-    
-    for (let i = 0; i < dates.length; i++) {
-        const date = dates[i];
-        const status = logs[date];
-        
-        if (status === 'completed') {
-            streak++;
-        } else if ((status === 'failed' || status === 'skipped') && streak >= 3) {
-            criticalDays.push(date);
-            streak = 0;
-        } else {
-            streak = 0;
+export const calculateCriticalDays = (
+  habit: Habit,
+  habitLogs: DailyLog,
+  startDayOfWeek: number = 1,
+): string[] => {
+  const dates = Object.keys(habitLogs).sort();
+  const criticalDays: string[] = [];
+
+  let streak = 0; // Streak of 'completed' days
+
+  for (let i = 0; i < dates.length; i++) {
+    const dateStr = dates[i];
+    const date = new Date(dateStr);
+    const status = habitLogs[dateStr];
+
+    if (status === 'completed') {
+      streak++;
+    } else if (
+      (status === 'failed' || status === 'skipped' || status === 'none') &&
+      streak >= 3 // Only consider critical if a decent streak was built
+    ) {
+      // Check if this habit has a weekly goal AND it's a "flexible" goal (< 7 days/week)
+      if (habit.goalDaysPerWeek && habit.goalDaysPerWeek < 7) {
+        // We need to check if the weekly goal was already met *for this week, before this date*.
+        // isWeeklyGoalMet counts completions up to the provided `date`.
+        if (isWeeklyGoalMet(habit, date, habitLogs, startDayOfWeek)) {
+          // The weekly goal was met, so this is considered a "rest day" or "goal achieved" day.
+          // It doesn't break the weekly goal consistency, so it's not a 'critical' missed day.
+          streak = 0; // Reset streak as the sequence of completions is broken for daily streak purposes
+          continue; // Don't add to criticalDays
         }
+      }
+      // If it's a daily habit (goalDaysPerWeek >= 7 or undefined) OR
+      // If it's a weekly habit but the weekly goal was NOT met (even with this day's status), then it's critical.
+      criticalDays.push(dateStr);
+      streak = 0; // Reset streak
+    } else {
+      // If status is not 'completed' and not triggering a critical day (e.g., streak < 3), reset streak.
+      streak = 0;
     }
-    
-    return criticalDays.reverse().slice(0, 5); // Return last 5 critical days
+  }
+
+  return criticalDays.reverse().slice(0, 5); // Return last 5 critical days
 };
 
 export const exportToCSV = (habits: Habit[], logs: { [habitId: string]: DailyLog }) => {
@@ -503,4 +527,44 @@ export const calculateLevel = (totalCompleted: number): UserLevel => {
         rank,
         progress: Math.min(100, Math.max(0, progress))
     };
+};
+
+export const getZodiacSign = (date: Date) => {
+    const day = date.getDate();
+    const month = date.getMonth(); // 0-indexed
+
+    // Adjust month for Capricorn which wraps around
+    const normalizedMonth = month;
+    const normalizedDay = day;
+
+    for (const sign of ZODIAC_SIGNS) {
+        const start = new Date(date.getFullYear(), sign.startMonth, sign.startDay);
+        const end = new Date(date.getFullYear(), sign.endMonth, sign.endDay);
+
+        // Handle wrap-around for Capricorn (Dec 22 - Jan 19)
+        if (sign.name === "Capricornio") {
+            if ((month === 11 && day >= sign.startDay) || (month === 0 && day <= sign.endDay)) {
+                return sign;
+            }
+        } else {
+            const current = new Date(date.getFullYear(), normalizedMonth, normalizedDay);
+            // Check if the current date falls within the sign's range
+            // Need to compare dates as if they are just MM-DD, ignoring year for range logic,
+            // but JS Date objects handle year by default. So create temp dates for comparison.
+            const sDay = sign.startDay;
+            const eDay = sign.endDay;
+            const sMonth = sign.startMonth;
+            const eMonth = sign.endMonth;
+
+            // Simplified logic: Check if current month/day is between start/end month/day
+            if (
+                (month === sMonth && day >= sDay) ||
+                (month === eMonth && day <= eDay) ||
+                (month > sMonth && month < eMonth)
+            ) {
+                return sign;
+            }
+        }
+    }
+    return { name: "Zodíaco Desconocido", symbol: "✨" }; // Fallback
 };

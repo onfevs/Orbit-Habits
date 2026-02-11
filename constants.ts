@@ -75,3 +75,18 @@ export const MONTH_NAMES = [
 ];
 
 export const WEEK_DAYS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+
+export const ZODIAC_SIGNS = [
+  { name: "Capricornio", symbol: "♑", startMonth: 0, startDay: 20, endMonth: 1, endDay: 18 }, // Ene 20 - Feb 18
+  { name: "Acuario", symbol: "♒", startMonth: 1, startDay: 19, endMonth: 2, endDay: 20 },      // Feb 19 - Mar 20
+  { name: "Piscis", symbol: "♓", startMonth: 2, startDay: 21, endMonth: 3, endDay: 19 },       // Mar 21 - Abr 19
+  { name: "Aries", symbol: "♈", startMonth: 3, startDay: 20, endMonth: 4, endDay: 20 },        // Abr 20 - May 20
+  { name: "Tauro", symbol: "♉", startMonth: 4, startDay: 21, endMonth: 5, endDay: 20 },        // May 21 - Jun 20
+  { name: "Géminis", symbol: "♊", startMonth: 5, startDay: 21, endMonth: 6, endDay: 22 },      // Jun 21 - Jul 22
+  { name: "Cáncer", symbol: "♋", startMonth: 6, startDay: 23, endMonth: 7, endDay: 22 },      // Jul 23 - Ago 22
+  { name: "Leo", symbol: "♌", startMonth: 7, startDay: 23, endMonth: 8, endDay: 22 },         // Ago 23 - Sep 22
+  { name: "Virgo", symbol: "♍", startMonth: 8, startDay: 23, endMonth: 9, endDay: 22 },       // Sep 23 - Oct 22
+  { name: "Libra", symbol: "♎", startMonth: 9, startDay: 23, endMonth: 10, endDay: 21 },      // Oct 23 - Nov 21
+  { name: "Escorpio", symbol: "♏", startMonth: 10, startDay: 22, endMonth: 11, endDay: 21 },    // Nov 22 - Dic 21
+  { name: "Sagitario", symbol: "♐", startMonth: 11, startDay: 22, endMonth: 0, endDay: 19 },    // Dic 22 - Ene 19 (wraps around)
+];
