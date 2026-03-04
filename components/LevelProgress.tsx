@@ -20,10 +20,10 @@ const LevelProgress: React.FC<LevelProgressProps> = ({ userLevel }) => {
                 duration: 1,
                 ease: "power2.out"
             });
-            
+
             // Pulse effect if XP gained
             if (userLevel.xp > prevXpRef.current) {
-                gsap.fromTo(barRef.current, 
+                gsap.fromTo(barRef.current,
                     { boxShadow: "0 0 20px #c9a24d" },
                     { boxShadow: "0 0 0px #c9a24d", duration: 1, clearProps: "boxShadow" }
                 );
@@ -49,11 +49,13 @@ const LevelProgress: React.FC<LevelProgressProps> = ({ userLevel }) => {
                     <div className="flex items-center gap-2">
                         <Trophy size={16} className="text-primary" />
                         <span className="font-serif font-bold text-lg text-white">{userLevel.rank}</span>
-                        <button 
+                        <button
                             onClick={() => setShowInfo(!showInfo)}
-                            className="text-slate-500 hover:text-white transition-colors ml-1"
+                            aria-label="Ver sistema de rangos"
+                            aria-expanded={showInfo}
+                            className="w-11 h-11 flex items-center justify-center rounded-full text-slate-500 hover:text-primary hover:bg-primary/10 transition-colors ml-1 cursor-pointer"
                         >
-                            <Info size={14} />
+                            <Info size={16} />
                         </button>
                     </div>
                 </div>
@@ -61,11 +63,11 @@ const LevelProgress: React.FC<LevelProgressProps> = ({ userLevel }) => {
                     <span className="text-xs text-muted font-mono">Nivel <span className="text-white font-bold">{userLevel.level}</span></span>
                 </div>
             </div>
-            
+
             {/* Progress Bar Container */}
             <div className="relative h-3 bg-slate-800 rounded-full overflow-hidden border border-slate-700 shadow-inner cursor-pointer" onClick={() => setShowInfo(!showInfo)}>
                 {/* Animated Fill */}
-                <div 
+                <div
                     ref={barRef}
                     className="absolute top-0 left-0 h-full bg-gradient-to-r from-primary-soft to-primary rounded-full shadow-[0_0_10px_rgba(201,162,77,0.5)]"
                     style={{ width: `${userLevel.progress}%` }}
@@ -73,7 +75,7 @@ const LevelProgress: React.FC<LevelProgressProps> = ({ userLevel }) => {
                     <div className="absolute inset-0 bg-white/20 animate-[shimmer_2s_infinite]" style={{ backgroundImage: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent)' }}></div>
                 </div>
             </div>
-            
+
             <div className="flex justify-between mt-1 text-[10px] text-slate-500 font-mono">
                 <span>{userLevel.xp} XP</span>
                 <span>{userLevel.nextLevelXp} XP</span>
@@ -94,16 +96,16 @@ const LevelProgress: React.FC<LevelProgressProps> = ({ userLevel }) => {
                                 <span>Ganancia por Hábito:</span>
                                 <span className="font-bold text-primary">+15 XP</span>
                             </div>
-                            
+
                             <div className="space-y-2">
                                 <p className="text-[10px] text-muted uppercase tracking-wider font-bold mb-1">Escalafón Espacial</p>
                                 {RANKS.map((rank) => (
-                                    <div 
-                                        key={rank.name} 
+                                    <div
+                                        key={rank.name}
                                         className={clsx(
                                             "flex items-center justify-between p-2 rounded-lg border transition-all",
-                                            userLevel.rank === rank.name 
-                                                ? "bg-primary/10 border-primary/50 shadow-gold" 
+                                            userLevel.rank === rank.name
+                                                ? "bg-primary/10 border-primary/50 shadow-gold"
                                                 : "bg-slate-800/50 border-transparent opacity-60"
                                         )}
                                     >
@@ -115,7 +117,7 @@ const LevelProgress: React.FC<LevelProgressProps> = ({ userLevel }) => {
                                     </div>
                                 ))}
                             </div>
-                            
+
                             <div className="text-[10px] text-center text-slate-500 italic pt-2">
                                 "La consistencia es el combustible de tu nave."
                             </div>

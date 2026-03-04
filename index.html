@@ -1,91 +1,440 @@
 <!DOCTYPE html>
 <html lang="en" class="dark">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Orbit Habits</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        darkMode: 'class',
-        theme: {
-          extend: {
-            colors: {
-              background: '#0b0d10', // Dark Main
-              surface: '#151922',    // Dark Card
-              primary: '#c9a24d',    // Accent Gold
-              'primary-soft': '#e1c878', 
-              success: '#10b981',    // Vibrant Emerald Green
-              'success-dark': '#047857',
-              danger: '#ef4444',     // Red
-              'danger-dark': '#991b1b',
-              text: '#f3f4f6',       // Brighter Text
-              muted: '#9ca3af',      // Muted Text
-            },
-            fontFamily: {
-              sans: ['Inter', 'system-ui', 'sans-serif'],
-              serif: ['Playfair Display', 'serif'],
-            },
-            keyframes: {
-              'flash-intense': {
-                '0%, 100%': { opacity: '1', boxShadow: '0 0 5px rgba(201,162,77,0.5)', transform: 'scale(1)' },
-                '50%': { opacity: '1', boxShadow: '0 0 25px rgba(201,162,77,1)', transform: 'scale(1.15)', borderColor: '#fff' },
-              }
-            },
-            animation: {
-              'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-              'spin-slow': 'spin 12s linear infinite',
-              'flash': 'flash-intense 2s ease-in-out infinite',
-            },
-            boxShadow: {
-              'strong': '0 12px 30px rgba(0, 0, 0, 0.5)',
-              'soft': '0 6px 18px rgba(0, 0, 0, 0.35)',
-              'gold': '0 0 15px rgba(201, 162, 77, 0.3)',
-              'neon-green': '0 0 10px rgba(16, 185, 129, 0.4)',
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- ── SEO Core ─────────────────────────────────────────────── -->
+  <title>Orbit Habits — Seguimiento de Hábitos Semanales e Inteligencia Personal</title>
+  <meta name="description"
+    content="Orbit Habits es una aplicación de seguimiento de hábitos con metas semanales, rachas, calendarios visuales y estadísticas inteligentes. Construye rutinas que realmente se sostienen." />
+  <meta name="keywords"
+    content="hábitos, habit tracker, metas semanales, racha diaria, rutinas, productividad, seguimiento de hábitos, bienestar personal" />
+  <meta name="author" content="Orbit Habits" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://orbithabits.app" />
+
+  <!-- ── Open Graph (Social Preview) ─────────────────────────── -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Orbit Habits — Construye Hábitos que Duran" />
+  <meta property="og:description"
+    content="Seguimiento inteligente de hábitos con metas semanales, rachas, calendarios visuales y resúmenes personalizados. Excelencia diaria." />
+  <meta property="og:url" content="https://orbithabits.app" />
+  <meta property="og:site_name" content="Orbit Habits" />
+  <meta property="og:image" content="https://orbithabits.app/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:locale" content="es_ES" />
+
+  <!-- ── Twitter Card ──────────────────────────────────────────── -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Orbit Habits — Construye Hábitos que Duran" />
+  <meta name="twitter:description"
+    content="Seguimiento inteligente de hábitos con metas semanales y calendarios visuales." />
+  <meta name="twitter:image" content="https://orbithabits.app/og-image.png" />
+
+  <!-- ── PWA & Theme ──────────────────────────────────────────── -->
+  <meta name="theme-color" content="#c9a24d" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Orbit Habits" />
+  <link rel="manifest" href="/manifest.json" />
+
+  <!-- ── Structured Data ──────────────────────────────────────── -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Orbit Habits",
+      "description": "Aplicación de seguimiento de hábitos semanales con rachas, calendarios visuales y estadísticas inteligentes.",
+      "url": "https://orbithabits.app",
+      "applicationCategory": "LifestyleApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "keywords": "habit tracker, seguimiento de hábitos, metas semanales, productividad"
+    }
+    </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            background: '#0b0d10',
+            surface: '#151922',
+            primary: '#c9a24d',
+            'primary-soft': '#e1c878',
+            success: '#10b981',
+            'success-dark': '#047857',
+            danger: '#ef4444',
+            'danger-dark': '#991b1b',
+            text: '#f3f4f6',
+            muted: '#9ca3af',
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            serif: ['Playfair Display', 'serif'],
+          },
+          keyframes: {
+            'flash-intense': {
+              '0%, 100%': { opacity: '1', boxShadow: '0 0 5px rgba(201,162,77,0.5)', transform: 'scale(1)' },
+              '50%': { opacity: '1', boxShadow: '0 0 25px rgba(201,162,77,1)', transform: 'scale(1.15)', borderColor: '#fff' },
             }
           },
+          animation: {
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'spin-slow': 'spin 12s linear infinite',
+            'flash': 'flash-intense 2s ease-in-out infinite',
+          },
+          boxShadow: {
+            'strong': '0 12px 30px rgba(0, 0, 0, 0.5)',
+            'soft': '0 6px 18px rgba(0, 0, 0, 0.35)',
+            'gold': '0 0 15px rgba(201, 162, 77, 0.3)',
+            'neon-green': '0 0 10px rgba(16, 185, 129, 0.4)',
+          }
         },
-      };
-    </script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>
-      body {
-        font-family: 'Inter', sans-serif;
-        background-color: #0b0d10;
-        /* Dynamic background component handles the visuals now */
-        color: #e5e7eb;
-        overflow-x: hidden;
-      }
-      
-      /* Optimize rendering */
-      * {
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
+      },
+    };
+  </script>
+  <!-- ── Fonts: Preload for performance ──────────────────────── -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preload" as="style"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;600;700&display=swap" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;600;700&display=swap"
+    rel="stylesheet" />
+  <style>
+    /* --- DARK THEME (default) --- */
+    html.dark {
+      --bg: #0b0d10;
+      --surface: #151922;
+      --border: rgba(255, 255, 255, 0.07);
+      --text: #f3f4f6;
+      --muted: #9ca3af;
+      --scrollbar-track: #0b0d10;
+      --scrollbar-thumb: rgba(255, 255, 255, 0.1);
+    }
+
+    /* --- LIGHT THEME --- */
+    html:not(.dark) {
+      --bg: #f0f2f7;
+      --surface: #ffffff;
+      --border: rgba(0, 0, 0, 0.08);
+      --text: #1e293b;
+      --muted: #64748b;
+      --scrollbar-track: #e2e8f0;
+      --scrollbar-thumb: rgba(0, 0, 0, 0.15);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    *,
+    *::before,
+    *::after {
+      transition-property: background-color, border-color, color, box-shadow;
+      transition-duration: 0.25s;
+      transition-timing-function: ease;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Prevent transition flash on interactive elements */
+    button,
+    a,
+    input,
+    select,
+    textarea {
+      transition-duration: 0.15s;
+    }
+
+    /* ── Confetti particle animation ─────────────────────────── */
+    @keyframes confetti-fall {
+      0% {
+        transform: translateY(-20px) rotate(0deg);
+        opacity: 1;
       }
 
-      /* Custom Scrollbar - Sleek & Modern */
-      ::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
+      100% {
+        transform: translateY(60px) rotate(720deg);
+        opacity: 0;
       }
-      ::-webkit-scrollbar-track {
-        background-color: #0b0d10;
+    }
+
+    .confetti-particle {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      border-radius: 2px;
+      animation: confetti-fall 0.8s ease-out forwards;
+    }
+
+    /* ── Milestone celebration ring ──────────────────────────── */
+    @keyframes celebration-ring {
+      0% {
+        transform: scale(1);
+        opacity: 0.8;
       }
-      ::-webkit-scrollbar-thumb {
-        background-color: rgba(255, 255, 255, 0.1);
-        border-radius: 4px;
+
+      50% {
+        transform: scale(1.4);
+        opacity: 0.4;
       }
-      ::-webkit-scrollbar-thumb:hover {
-        background-color: rgba(201, 162, 77, 0.5);
+
+      100% {
+        transform: scale(2);
+        opacity: 0;
       }
-      
-      /* Glass effect for active elements */
-      .glass-panel {
-        background: rgba(21, 25, 34, 0.7);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .celebration-ring {
+      animation: celebration-ring 0.6s ease-out forwards;
+    }
+
+    /* ── Note dot pulse ──────────────────────────────────────── */
+    @keyframes note-pulse {
+
+      0%,
+      100% {
+        transform: scale(1);
+        opacity: 1;
       }
-    </style>
+
+      50% {
+        transform: scale(1.6);
+        opacity: 0.5;
+      }
+    }
+
+    .note-dot-pulse {
+      animation: note-pulse 2s ease-in-out infinite;
+    }
+
+    /* ── Stats card stagger entrance ─────────────────────────── */
+    @keyframes stagger-in {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .stagger-child:nth-child(1) {
+      animation: stagger-in 0.3s 0.05s ease both;
+    }
+
+    .stagger-child:nth-child(2) {
+      animation: stagger-in 0.3s 0.10s ease both;
+    }
+
+    .stagger-child:nth-child(3) {
+      animation: stagger-in 0.3s 0.15s ease both;
+    }
+
+    .stagger-child:nth-child(4) {
+      animation: stagger-in 0.3s 0.20s ease both;
+    }
+
+    .stagger-child:nth-child(5) {
+      animation: stagger-in 0.3s 0.25s ease both;
+    }
+
+    /* ── Ripple on button tap ────────────────────────────────── */
+    @keyframes ripple {
+      0% {
+        transform: scale(0);
+        opacity: 0.6;
+      }
+
+      100% {
+        transform: scale(2.5);
+        opacity: 0;
+      }
+    }
+
+    .ripple-effect::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: currentColor;
+      animation: ripple 0.4s ease-out;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background-color: var(--scrollbar-track);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background-color: var(--scrollbar-thumb);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background-color: rgba(201, 162, 77, 0.5);
+    }
+
+    /* Glass effect */
+    .glass-panel {
+      background: rgba(21, 25, 34, 0.7);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    html:not(.dark) .glass-panel {
+      background: rgba(255, 255, 255, 0.8);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    /* Light mode overrides for Tailwind semantic classes */
+    html:not(.dark) .bg-background {
+      background-color: #f0f2f7 !important;
+    }
+
+    html:not(.dark) .bg-surface {
+      background-color: #ffffff !important;
+    }
+
+    html:not(.dark) .text-text {
+      color: #1e293b !important;
+    }
+
+    html:not(.dark) .text-muted {
+      color: #64748b !important;
+    }
+
+    html:not(.dark) .border-slate-700 {
+      border-color: #e2e8f0 !important;
+    }
+
+    html:not(.dark) .border-slate-700\/50 {
+      border-color: rgba(226, 232, 240, 0.7) !important;
+    }
+
+    html:not(.dark) .border-slate-800 {
+      border-color: #e2e8f0 !important;
+    }
+
+    html:not(.dark) .bg-slate-900 {
+      background-color: #f8fafc !important;
+    }
+
+    html:not(.dark) .bg-slate-800 {
+      background-color: #f1f5f9 !important;
+    }
+
+    html:not(.dark) .bg-slate-800\/40 {
+      background-color: rgba(241, 245, 249, 0.7) !important;
+    }
+
+    html:not(.dark) .text-slate-200 {
+      color: #334155 !important;
+    }
+
+    html:not(.dark) .text-slate-300 {
+      color: #475569 !important;
+    }
+
+    html:not(.dark) .text-slate-400 {
+      color: #64748b !important;
+    }
+
+    html:not(.dark) .text-slate-500 {
+      color: #94a3b8 !important;
+    }
+
+    html:not(.dark) .bg-background\/80 {
+      background-color: rgba(240, 242, 247, 0.9) !important;
+    }
+
+    html:not(.dark) header .text-slate-100 {
+      color: #1e293b !important;
+    }
+
+    html:not(.dark) header .text-slate-400 {
+      color: #64748b !important;
+    }
+
+    html:not(.dark) nav.fixed {
+      background-color: rgba(255, 255, 255, 0.92) !important;
+      border-color: #e2e8f0 !important;
+    }
+
+    html:not(.dark) .shadow-strong {
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    html:not(.dark) .shadow-soft {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06) !important;
+    }
+
+    /* DynamicBackground light mode adaptation */
+    html:not(.dark) .bg-\[\#0b0d10\] {
+      background-color: #f0f2f7 !important;
+    }
+
+    /* ── Focus-visible (keyboard navigation — CRITICAL a11y) ── */
+    *:focus-visible {
+      outline: 2px solid #c9a24d;
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+
+    button:focus-visible {
+      outline: 2px solid #c9a24d;
+      outline-offset: 3px;
+      border-radius: 8px;
+    }
+
+    /* ── prefers-reduced-motion (CRITICAL a11y) ── */
+    @media (prefers-reduced-motion: reduce) {
+
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
+    /* ── Light mode: better input contrast ── */
+    html:not(.dark) input,
+    html:not(.dark) textarea,
+    html:not(.dark) select {
+      background-color: #ffffff;
+      border-color: #cbd5e1;
+      color: #1e293b;
+    }
+
+    html:not(.dark) input::placeholder,
+    html:not(.dark) textarea::placeholder {
+      color: #94a3b8;
+    }
+  </style>
   <script type="importmap">
 {
   "imports": {
@@ -100,10 +449,12 @@
   }
 }
 </script>
-<link rel="stylesheet" href="/index.css">
+  <link rel="stylesheet" href="/index.css">
 </head>
-  <body>
-    <div id="root"></div>
+
+<body>
+  <div id="root"></div>
   <script type="module" src="/index.tsx"></script>
 </body>
+
 </html>
